@@ -1,0 +1,8 @@
+name: 'JWT Token'
+type: module
+description: 'Provides a custom /jwt/token endpoint for authentication.'
+core_version_requirement: ^10
+package: Custom
+dependencies:
+  - jwt
+  - key

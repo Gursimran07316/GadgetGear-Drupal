@@ -1,0 +1,7 @@
+jwt_token.token:
+  path: '/jwt/token'
+  defaults:
+    _controller: '\Drupal\jwt_token\Controller\TokenController::getToken'
+    _format: 'json'
+  requirements:
+    _access: 'TRUE'
