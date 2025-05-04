@@ -1,0 +1,4 @@
+name: gadgetgear
+recipe: drupal10
+config:
+  webroot: .
