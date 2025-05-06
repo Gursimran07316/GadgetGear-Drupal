@@ -1,0 +1,15 @@
+custom_api.products:
+  path: '/api/products'
+  defaults:
+    _controller: '\Drupal\custom_api\Controller\ProductApiController::getProducts'
+    _title: 'Products API'
+  requirements:
+    _permission: 'access content'
+
+custom_api.products_top:
+  path: '/api/products/top'
+  defaults:
+    _controller: '\Drupal\custom_api\Controller\ProductApiController::getTopProducts'
+    _title: 'Top Products'
+  requirements:
+    _permission: 'access content'
