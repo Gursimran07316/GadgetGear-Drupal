@@ -1,0 +1,68 @@
+main {
+  min-height: 80vh;
+}
+
+.rating span {
+  margin: 0.1rem;
+}
+
+.rating svg {
+  color: #f8e825;
+}
+
+.rating-text {
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding-left: 0.5rem;
+}
+
+.product-title {
+  height: 2.5em; /* Set a fixed height */
+  overflow: hidden; /* Hide overflow content */
+  text-overflow: ellipsis; /* Add ellipsis for long text */
+  white-space: nowrap; /* Prevent wrapping */
+}
+
+table td,
+table th {
+  text-align: center;
+}
+
+.review {
+  margin-top: 30px;
+}
+
+.review h2 {
+  font-size: 24px;
+  background: #f4f4f4;
+  padding: 10px;
+  border: 1px solid #ddd;
+}
+
+.review button {
+  margin-top: 10px;
+}
+
+.carousel-caption {
+  position: absolute;
+  width: 100%;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+}
+.carousel-img {
+  height: 500px; /* Set a fixed height */
+  object-fit: contain; /* Ensure the whole image fits into the box, might introduce empty spaces */
+  width: 100%; /* Make sure the image covers the width */
+  background-color: #000; /* Optional: sets a background color for the empty spaces */
+}
+.card-img {
+  height: 200px; /* Adjust the height as needed */
+  object-fit: contain; /* Ensures the whole image is visible, might introduce empty spaces */
+  width: 100%; /* Full width of the card */
+  background-color: white /* Light background to blend with empty spaces */
+}
+.btn-block{
+  background-color: #000;
+}
