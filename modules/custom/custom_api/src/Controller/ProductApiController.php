@@ -61,6 +61,7 @@ class ProductApiController {
               $node->get('field_product_image')->entity->getFileUri()
             )
           : null,
+          'numReviews'=>0
       ];
     }
   
@@ -70,6 +71,7 @@ class ProductApiController {
       'pages' => ceil($count / $pageSize),
     ]);
   }
+
   public function getTopProducts() {
     $storage = \Drupal::entityTypeManager()->getStorage('node');
     $query = $storage->getQuery()
@@ -100,11 +102,39 @@ class ProductApiController {
               $node->get('field_product_image')->entity->getFileUri()
             )
           : null,
+          'numReviews'=>0
       ];
     }
   
     return new JsonResponse($products);
   }
   
-  
+  public function getProductById($id) {
+  $node = Node::load($id);
+
+  if ($node && $node->bundle() === 'product' && $node->isPublished()) {
+    $product = [
+      '_id' => $node->id(),
+      'name' => $node->getTitle(),
+      'brand' => $node->get('field_brand')->value,
+      'category' => $node->get('field_category')->value,
+      'description' => $node->get('field_description')->value,
+      'price' => $node->get('field_price')->value,
+      'stock_quantity' => $node->get('field_stock__quantity')->value,
+      'rating' => $node->get('field_rating')->value,
+      'num_reviews' => $node->get('field_num_reviews')->value,
+      'image' => $node->get('field_product_image')->entity
+        ? \Drupal::service('file_url_generator')->generateAbsoluteString(
+            $node->get('field_product_image')->entity->getFileUri()
+          )
+        : null,
+      'reviews'=>[]
+    ];
+
+    return new JsonResponse($product);
+  } else {
+    return new JsonResponse(['message' => 'Product not found'], 404);
+  }
+}
+
 }

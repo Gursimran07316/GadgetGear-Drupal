@@ -13,3 +13,38 @@ custom_api.products_top:
     _title: 'Top Products'
   requirements:
     _permission: 'access content'
+
+custom_api.product:
+  path: '/api/products/{id}'
+  defaults:
+    _controller: '\Drupal\custom_api\Controller\ProductApiController::getProductById'
+    _title: 'Product Details'
+  requirements:
+    _permission: 'access content'
+
+custom_api.login:
+  path: '/api/users/auth'
+  defaults:
+    _title: 'Login User'
+    _controller: '\Drupal\custom_api\Controller\UserAuthController::loginUser'
+  requirements:
+    _permission: 'access content'
+    _method: 'POST'
+
+custom_api.logout:
+  path: '/api/users'
+  defaults:
+    _title: 'Register User'
+    _controller: '\Drupal\custom_api\Controller\UserAuthController::registerUser'
+  requirements:
+    _permission: 'access content'
+    _method: 'POST'
+
+custom_api.registeruser:
+  path: '/api/users/logout'
+  defaults:
+    _title: 'Logout User'
+    _controller: '\Drupal\custom_api\Controller\UserAuthController::logoutUser'
+  requirements:
+    _permission: 'access content'
+    _method: 'POST'
