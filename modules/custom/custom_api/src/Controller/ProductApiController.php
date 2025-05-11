@@ -3,7 +3,12 @@
 namespace Drupal\custom_api\Controller;
 
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
 use Drupal\node\Entity\Node;
+use Drupal\user\Entity\User;
+use Drupal\key\Entity\Key;
+use Firebase\JWT\JWT;
+use Firebase\JWT\Key as JWTKey;
 
 class ProductApiController {
 
@@ -55,13 +60,13 @@ class ProductApiController {
         'price' => $node->get('field_price')->value,
         'stock_quantity' => $node->get('field_stock__quantity')->value,
         'rating' => $node->get('field_rating')->value,
-        'num_reviews' => $node->get('field_num_reviews')->value,
+        'numReviews' => $node->get('field_num_reviews')->value,
         'image' => $node->get('field_product_image')->entity
           ? \Drupal::service('file_url_generator')->generateAbsoluteString(
               $node->get('field_product_image')->entity->getFileUri()
             )
           : null,
-          'numReviews'=>0
+          
       ];
     }
   
@@ -96,13 +101,13 @@ class ProductApiController {
         'price' => $node->get('field_price')->value,
         'stock_quantity' => $node->get('field_stock__quantity')->value,
         'rating' => $node->get('field_rating')->value,
-        'num_reviews' => $node->get('field_num_reviews')->value,
+        'numReviews' => $node->get('field_num_reviews')->value,
         'image' => $node->get('field_product_image')->entity
           ? \Drupal::service('file_url_generator')->generateAbsoluteString(
               $node->get('field_product_image')->entity->getFileUri()
             )
           : null,
-          'numReviews'=>0
+          
       ];
     }
   
@@ -112,7 +117,10 @@ class ProductApiController {
   public function getProductById($id) {
   $node = Node::load($id);
 
+
   if ($node && $node->bundle() === 'product' && $node->isPublished()) {
+    $reviewsField = $node->get('field_reviews')->value ?? '[]';
+    $reviews = json_decode($reviewsField, TRUE);
     $product = [
       '_id' => $node->id(),
       'name' => $node->getTitle(),
@@ -122,19 +130,89 @@ class ProductApiController {
       'price' => $node->get('field_price')->value,
       'stock_quantity' => $node->get('field_stock__quantity')->value,
       'rating' => $node->get('field_rating')->value,
-      'num_reviews' => $node->get('field_num_reviews')->value,
+      'numReviews' => $node->get('field_num_reviews')->value,
       'image' => $node->get('field_product_image')->entity
         ? \Drupal::service('file_url_generator')->generateAbsoluteString(
             $node->get('field_product_image')->entity->getFileUri()
           )
         : null,
-      'reviews'=>[]
+      'reviews'=>$reviews
     ];
 
     return new JsonResponse($product);
   } else {
     return new JsonResponse(['message' => 'Product not found'], 404);
   }
+}
+
+
+public function createReview(Request $request, $id)
+ {
+  // 1. Auth via JWT cookie
+  $jwt = $request->cookies->get('jwt');
+  if (!$jwt) {
+    return new JsonResponse(['message' => 'Not authorized, no token'], 401);
+  }
+
+  $key = Key::load('simple_oauth');
+  $secret = $key ? $key->getKeyValue() : '';
+  if (!$secret) {
+    return new JsonResponse(['message' => 'JWT secret not configured'], 500);
+  }
+
+  try {
+    $decoded = JWT::decode($jwt, new JWTKey($secret, 'HS256'));
+    $uid = $decoded->uid ?? 0;
+    $user = User::load($uid);
+    if (!$user || !$user->isActive()) {
+      return new JsonResponse(['message' => 'Invalid or inactive user'], 401);
+    }
+  } catch (\Exception $e) {
+    return new JsonResponse(['message' => 'Token error: ' . $e->getMessage()], 401);
+  }
+
+  // 2. Load product node
+  $node = Node::load($id);
+  if (!$node || $node->bundle() !== 'product') {
+    return new JsonResponse(['message' => 'Product not found'], 404);
+  }
+
+  // 3. Get review data from body
+  $data = json_decode($request->getContent(), TRUE);
+  $rating = (int) ($data['rating'] ?? 0);
+  $comment = $data['comment'] ?? '';
+
+  // 4. Load existing reviews
+  $reviewsField = $node->get('field_reviews')->value ?? '[]';
+  $reviews = json_decode($reviewsField, TRUE);
+
+  // 5. Check if user already reviewed
+  foreach ($reviews as $rev) {
+    if ($rev['user_id'] == $user->id()) {
+      return new JsonResponse(['message' => 'Product already reviewed'], 400);
+    }
+  }
+
+  // 6. Add new review
+  $reviews[] = [
+    '_id' => $user->id(),
+    'name' => $user->getDisplayName(),
+    'rating' => $rating,
+    'comment' => $comment,
+    'createdAt' => date('c'),
+  ];
+
+  // 7. Recalculate rating
+  $numReviews = count($reviews);
+  $avgRating = array_sum(array_column($reviews, 'rating')) / $numReviews;
+
+  // 8. Save back to node
+  $node->set('field_reviews', json_encode($reviews));
+  $node->set('field_rating', $avgRating);
+  $node->set('field_num_reviews', $numReviews);
+  $node->save();
+
+  return new JsonResponse(['message' => 'Review added'], 201);
 }
 
 }

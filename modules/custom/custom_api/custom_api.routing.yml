@@ -22,6 +22,16 @@ custom_api.product:
   requirements:
     _permission: 'access content'
 
+custom_api.product_review:
+  path: '/api/products/{id}/reviews'
+  defaults:
+    _controller: '\Drupal\custom_api\Controller\ProductApiController::createReview'
+    _title: 'Create a product review'
+  requirements:
+    _permission: 'access content'
+    _methods: 'POST'
+
+
 custom_api.login:
   path: '/api/users/auth'
   defaults:
