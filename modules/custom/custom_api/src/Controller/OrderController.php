@@ -108,7 +108,7 @@ class OrderController {
 
     // Return response
     return new JsonResponse([
-      'order_id' => $order->id(),
+      '_id' => $order->id(),
       'user_id' => $user->id(),
       'items' => $validatedItems,
       'shippingAddress' => $shippingAddress,
