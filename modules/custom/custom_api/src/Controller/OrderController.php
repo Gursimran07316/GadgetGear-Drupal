@@ -184,4 +184,70 @@ class OrderController {
       }
       
   }
+
+  public function getOrderById($id) {
+    $request = \Drupal::request();
+    $jwt = $request->cookies->get('jwt');
+  
+    if (!$jwt) {
+      return new JsonResponse(['message' => 'Not authorized, no token'], 401);
+    }
+  
+    $key = Key::load('simple_oauth');
+    $secret = $key ? $key->getKeyValue() : null;
+  
+    if (!$secret) {
+      return new JsonResponse(['message' => 'JWT secret missing'], 500);
+    }
+  
+    try {
+      $decoded = JWT::decode($jwt, new JWTKey($secret, 'HS256'));
+      $uid = $decoded->uid ?? null;
+  
+      if (!$uid) {
+        return new JsonResponse(['message' => 'Invalid token'], 401);
+      }
+  
+      $order = Node::load($id);
+  
+      if (!$order || $order->bundle() !== 'order') {
+        return new JsonResponse(['message' => 'Order not found'], 404);
+      }
+  
+      // Allow only owner or admin
+      $owner_id = $order->getOwnerId();
+      if ($owner_id != $uid && !User::load($uid)->hasPermission('administer nodes')) {
+        return new JsonResponse(['message' => 'Unauthorized access'], 403);
+      }
+  
+      $shipping = json_decode($order->get('field_shipping')->value, TRUE);
+      $items = json_decode($order->get('field_order_items')->value ?? '[]', TRUE);
+  
+      $user = User::load($owner_id);
+  
+      return new JsonResponse([
+        '_id' => $order->id(),
+        'user' => [
+          '_id' => $user->id(),
+          'name' => $user->getDisplayName(),
+          'email' => $user->getEmail(),
+        ],
+        'shippingAddress' => $shipping,
+        'orderItems' => $items,
+        'paymentMethod' => $order->get('field_payment_method')->value,
+        'itemsPrice' => (float) $order->get('field_items_price')->value,
+        'taxPrice' => (float) $order->get('field_tax_price')->value,
+        'shippingPrice' => (float) $order->get('field_shipping_price')->value,
+        'totalPrice' => (float) $order->get('field_total_price')->value,
+        'isPaid' => (bool) $order->get('field_is_paid')->value,
+        'isDelivered' => (bool) $order->get('field_is_delivered')->value,
+        'createdAt' => date('c', $order->getCreatedTime()),
+        'updatedAt' => date('c', $order->getChangedTime()),
+      ]);
+  
+    } catch (\Exception $e) {
+      return new JsonResponse(['message' => 'Token error: ' . $e->getMessage()], 403);
+    }
+  }
+  
 }

@@ -65,3 +65,12 @@ custom_api.my_orders:
     _title: 'My Orders'
   requirements:
     _permission: 'access content'
+    
+custom_api.get_order_by_id:
+  path: '/api/orders/{id}'
+  defaults:
+    _controller: '\Drupal\custom_api\Controller\OrderController::getOrderById'
+    _title: 'Get Order by ID'
+  requirements:
+    _permission: 'access content'
+    id: \d+
