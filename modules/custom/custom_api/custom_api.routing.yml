@@ -48,3 +48,20 @@ custom_api.registeruser:
   requirements:
     _permission: 'access content'
     _method: 'POST'
+
+custom_api.create_order:
+  path: '/api/orders'
+  defaults:
+    _controller: '\Drupal\custom_api\Controller\OrderController::addOrderItems'
+    _title: 'Create Order'
+  requirements:
+    _permission: 'access content'
+    _method: 'POST'
+
+custom_api.my_orders:
+  path: '/api/orders/mine'
+  defaults:
+    _controller: '\Drupal\custom_api\Controller\OrderController::getMyOrders'
+    _title: 'My Orders'
+  requirements:
+    _permission: 'access content'
