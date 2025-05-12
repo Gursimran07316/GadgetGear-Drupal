@@ -5,6 +5,33 @@ custom_api.products:
     _title: 'Products API'
   requirements:
     _permission: 'access content'
+    
+custom_api.create_product:
+  path: '/api/products'
+  defaults:
+    _controller: '\Drupal\custom_api\Controller\ProductApiController::createProduct'
+    _title: 'Create Product'
+  requirements:
+    _permission: 'access content'
+  methods: [POST]
+
+custom_api.update_product:
+  path: '/api/products/{id}'
+  defaults:
+    _controller: '\Drupal\custom_api\Controller\ProductApiController::updateProduct'
+    _title: 'Update Product'
+  requirements:
+    _permission: 'access content'
+  methods: [PUT]
+  
+custom_api.delete_product:
+  path: '/api/products/{id}'
+  defaults:
+    _controller: '\Drupal\custom_api\Controller\ProductApiController::deleteProduct'
+    _title: 'Delete Product'
+  requirements:
+    _permission: 'access content'
+  methods: [DELETE]
 
 custom_api.products_top:
   path: '/api/products/top'
@@ -29,7 +56,7 @@ custom_api.product_review:
     _title: 'Create a product review'
   requirements:
     _permission: 'access content'
-    _methods: 'POST'
+    _method: 'POST'
 
 
 custom_api.login:
