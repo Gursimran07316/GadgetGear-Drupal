@@ -157,3 +157,20 @@ custom_api.get_order_by_id:
     _permission: 'access content'
     id: \d+
   methods: [GET]
+custom_api.get_all_orders:
+  path: '/api/orders'
+  defaults:
+    _controller: '\Drupal\custom_api\Controller\OrderController::getAllOrders'
+    _title: 'Get All Orders'
+  requirements:
+    _permission: 'access content'
+  methods: [GET]
+
+custom_api.mark_order_delivered:
+  path: '/api/orders/{id}/deliver'
+  defaults:
+    _controller: '\Drupal\custom_api\Controller\OrderController::markOrderDelivered'
+    _title: 'Mark Order Delivered'
+  requirements:
+    _permission: 'access content'
+  methods: [PUT]

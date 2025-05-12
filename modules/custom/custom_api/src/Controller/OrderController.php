@@ -249,5 +249,99 @@ class OrderController {
       return new JsonResponse(['message' => 'Token error: ' . $e->getMessage()], 403);
     }
   }
+  public function getAllOrders() {
+    $request = \Drupal::request();
+    $jwt = $request->cookies->get('jwt');
+  
+    if (!$jwt) {
+      return new JsonResponse(['message' => 'Not authorized, no token'], 401);
+    }
+  
+    $key = Key::load('simple_oauth');
+    $secret = $key ? $key->getKeyValue() : null;
+  
+    if (!$secret) {
+      return new JsonResponse(['message' => 'JWT secret missing'], 500);
+    }
+  
+    try {
+      $decoded = JWT::decode($jwt, new JWTKey($secret, 'HS256'));
+      $uid = $decoded->uid ?? null;
+      $user = User::load($uid);
+  
+      if (!$user || !in_array('administrator', $user->getRoles())) {
+        return new JsonResponse(['message' => 'Admin access required'], 403);
+      }
+  
+      $query = \Drupal::entityTypeManager()->getStorage('node')->getQuery()
+        ->accessCheck(FALSE)
+        ->condition('type', 'order');
+  
+      $nids = $query->execute();
+      $orders = Node::loadMultiple($nids);
+  
+      $output = [];
+  
+      foreach ($orders as $order) {
+        $owner = $order->getOwner();
+        $output[] = [
+          '_id' => $order->id(),
+          'user' => [
+            '_id' => $owner->id(),
+            'name' => $owner->getDisplayName(),
+          ],
+          'isPaid' => (bool) $order->get('field_is_paid')->value,
+          'isDelivered' => (bool) $order->get('field_is_delivered')->value,
+          'totalPrice' => (float) $order->get('field_total_price')->value,
+          'createdAt' => date('c', $order->getCreatedTime()),
+        ];
+      }
+  
+      return new JsonResponse($output);
+  
+    } catch (\Exception $e) {
+      return new JsonResponse(['message' => 'Token error: ' . $e->getMessage()], 403);
+    }
+  }
+  public function markOrderDelivered($id) {
+    $request = \Drupal::request();
+    $jwt = $request->cookies->get('jwt');
+  
+    if (!$jwt) {
+      return new JsonResponse(['message' => 'Not authorized, no token'], 401);
+    }
+  
+    $key = Key::load('simple_oauth');
+    $secret = $key ? $key->getKeyValue() : null;
+  
+    if (!$secret) {
+      return new JsonResponse(['message' => 'JWT secret missing'], 500);
+    }
+  
+    try {
+      $decoded = JWT::decode($jwt, new JWTKey($secret, 'HS256'));
+      $uid = $decoded->uid ?? null;
+      $user = User::load($uid);
+  
+      if (!$user || !in_array('administrator', $user->getRoles())) {
+        return new JsonResponse(['message' => 'Admin access required'], 403);
+      }
+  
+      $order = Node::load($id);
+  
+      if (!$order || $order->bundle() !== 'order') {
+        return new JsonResponse(['message' => 'Order not found'], 404);
+      }
+  
+      $order->set('field_is_delivered', 1);
+      $order->save();
+  
+      return new JsonResponse(['message' => 'Order marked as delivered']);
+  
+    } catch (\Exception $e) {
+      return new JsonResponse(['message' => 'Token error: ' . $e->getMessage()], 403);
+    }
+  }
+    
   
 }
