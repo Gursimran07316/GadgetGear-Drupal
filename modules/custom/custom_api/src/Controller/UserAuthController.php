@@ -157,5 +157,132 @@ class UserAuthController extends ControllerBase {
   
     return $response;
   }
+  private function getAuthenticatedAdmin() {
+    $request = \Drupal::request();
+    $jwt = $request->cookies->get('jwt');
   
+    if (!$jwt) {
+      throw new \Exception('Not authorized, no token', 401);
+    }
+  
+    $key = \Drupal\key\Entity\Key::load('simple_oauth');
+    $secret = $key ? $key->getKeyValue() : '';
+    if (!$secret) {
+      throw new \Exception('JWT secret not configured', 500);
+    }
+  
+    $decoded = \Firebase\JWT\JWT::decode($jwt, new \Firebase\JWT\Key($secret, 'HS256'));
+    $uid = $decoded->uid ?? null;
+    $user = \Drupal\user\Entity\User::load($uid);
+  
+    if (!$user || !$user->isActive() || !in_array('administrator', $user->getRoles())) {
+      throw new \Exception('Not authorized as admin', 403);
+    }
+  
+    return $user;
+  }
+  public function getUsers() {
+    try {
+      $this->getAuthenticatedAdmin();
+  
+      $users = \Drupal::entityTypeManager()->getStorage('user')->loadMultiple();
+      $data = [];
+  
+      foreach ($users as $user) {
+        $data[] = [
+          '_id' => $user->id(),
+          'name' => $user->getAccountName(),
+          'email' => $user->getEmail(),
+          'isAdmin' => in_array('administrator', $user->getRoles()),
+        ];
+      }
+  
+      return new JsonResponse($data);
+  
+    } catch (\Exception $e) {
+      return new JsonResponse(['message' => $e->getMessage()], $e->getCode() ?: 403);
+    }
+  }
+  public function getUserById($id) {
+    try {
+      $this->getAuthenticatedAdmin();
+      $user = User::load($id);
+  
+      if (!$user) {
+        return new JsonResponse(['message' => 'User not found'], 404);
+      }
+  
+      return new JsonResponse([
+        '_id' => $user->id(),
+        'name' => $user->getAccountName(),
+        'email' => $user->getEmail(),
+        'isAdmin' => in_array('administrator', $user->getRoles()),
+      ]);
+  
+    } catch (\Exception $e) {
+      return new JsonResponse(['message' => $e->getMessage()], $e->getCode() ?: 403);
+    }
+  }
+  public function deleteUser($id) {
+    try {
+      $this->getAuthenticatedAdmin();
+      $user = User::load($id);
+  
+      if (!$user) {
+        return new JsonResponse(['message' => 'User not found'], 404);
+      }
+  
+      if (in_array('administrator', $user->getRoles())) {
+        return new JsonResponse(['message' => 'Cannot delete admin user'], 400);
+      }
+  
+      $user->delete();
+      return new JsonResponse(['message' => 'User removed']);
+  
+    } catch (\Exception $e) {
+      return new JsonResponse(['message' => $e->getMessage()], $e->getCode() ?: 403);
+    }
+  }
+  public function updateUser(Request $request, $id) {
+    try {
+      $this->getAuthenticatedAdmin();
+  
+      $data = json_decode($request->getContent(), TRUE);
+      $user = User::load($id);
+  
+      if (!$user) {
+        return new JsonResponse(['message' => 'User not found'], 404);
+      }
+  
+      if (!empty($data['name'])) {
+        $user->set('name', $data['name']);
+      }
+      if (!empty($data['email'])) {
+        $user->set('mail', $data['email']);
+      }
+  
+      if (isset($data['isAdmin'])) {
+        $roles = $user->getRoles();
+        if ((bool)$data['isAdmin']) {
+          $roles[] = 'administrator';
+        } else {
+          $roles = array_diff($roles, ['administrator']);
+        }
+        $user->set('roles', array_unique($roles));
+      }
+  
+      $user->save();
+  
+      return new JsonResponse([
+        '_id' => $user->id(),
+        'name' => $user->getAccountName(),
+        'email' => $user->getEmail(),
+        'isAdmin' => in_array('administrator', $user->getRoles()),
+      ]);
+  
+    } catch (\Exception $e) {
+      return new JsonResponse(['message' => $e->getMessage()], $e->getCode() ?: 403);
+    }
+  }
+      
 }

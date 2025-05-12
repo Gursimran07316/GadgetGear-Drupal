@@ -5,6 +5,7 @@ custom_api.products:
     _title: 'Products API'
   requirements:
     _permission: 'access content'
+  methods: [GET]
     
 custom_api.create_product:
   path: '/api/products'
@@ -23,7 +24,7 @@ custom_api.update_product:
   requirements:
     _permission: 'access content'
   methods: [PUT]
-  
+
 custom_api.delete_product:
   path: '/api/products/{id}'
   defaults:
@@ -40,6 +41,7 @@ custom_api.products_top:
     _title: 'Top Products'
   requirements:
     _permission: 'access content'
+  methods: [GET]
 
 custom_api.product:
   path: '/api/products/{id}'
@@ -48,6 +50,7 @@ custom_api.product:
     _title: 'Product Details'
   requirements:
     _permission: 'access content'
+  methods: [GET]
 
 custom_api.product_review:
   path: '/api/products/{id}/reviews'
@@ -56,7 +59,7 @@ custom_api.product_review:
     _title: 'Create a product review'
   requirements:
     _permission: 'access content'
-    _method: 'POST'
+  methods: [POST]
 
 
 custom_api.login:
@@ -66,25 +69,66 @@ custom_api.login:
     _controller: '\Drupal\custom_api\Controller\UserAuthController::loginUser'
   requirements:
     _permission: 'access content'
-    _method: 'POST'
+  methods: [POST]
 
-custom_api.logout:
+custom_api.register_user:
   path: '/api/users'
   defaults:
     _title: 'Register User'
     _controller: '\Drupal\custom_api\Controller\UserAuthController::registerUser'
   requirements:
     _permission: 'access content'
-    _method: 'POST'
+  methods: [POST]
 
-custom_api.registeruser:
+custom_api.logout:
   path: '/api/users/logout'
   defaults:
     _title: 'Logout User'
     _controller: '\Drupal\custom_api\Controller\UserAuthController::logoutUser'
   requirements:
     _permission: 'access content'
-    _method: 'POST'
+  methods: [POST]
+
+custom_api.get_users:
+  path: '/api/users'
+  defaults:
+    _controller: '\Drupal\custom_api\Controller\UserAuthController::getUsers'
+    _title: 'Get all users'
+  requirements:
+    _permission: 'access content'
+  methods: [GET]
+    
+
+custom_api.get_user_by_id:
+  path: '/api/users/{id}'
+  defaults:
+    _controller: '\Drupal\custom_api\Controller\UserAuthController::getUserById'
+    _title: 'Get user by ID'
+  requirements:
+    _permission: 'access content'
+    id: \d+
+  methods: [GET]
+
+custom_api.update_user:
+  path: '/api/users/{id}'
+  defaults:
+    _controller: '\Drupal\custom_api\Controller\UserAuthController::updateUser'
+    _title: 'Update user'
+  requirements:
+    _permission: 'access content'
+    id: \d+
+  methods: [PUT]
+
+custom_api.delete_user:
+  path: '/api/users/{id}'
+  defaults:
+    _controller: '\Drupal\custom_api\Controller\UserAuthController::deleteUser'
+    _title: 'Delete user'
+  requirements:
+    _permission: 'access content'
+    id: \d+
+  methods: [DELETE]
+
 
 custom_api.create_order:
   path: '/api/orders'
@@ -93,7 +137,7 @@ custom_api.create_order:
     _title: 'Create Order'
   requirements:
     _permission: 'access content'
-    _method: 'POST'
+  methods: [POST]
 
 custom_api.my_orders:
   path: '/api/orders/mine'
@@ -102,6 +146,7 @@ custom_api.my_orders:
     _title: 'My Orders'
   requirements:
     _permission: 'access content'
+  methods: [GET]
     
 custom_api.get_order_by_id:
   path: '/api/orders/{id}'
@@ -111,3 +156,4 @@ custom_api.get_order_by_id:
   requirements:
     _permission: 'access content'
     id: \d+
+  methods: [GET]
